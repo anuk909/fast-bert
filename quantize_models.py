@@ -1,85 +1,108 @@
-"""
-Quantize DistilBERT models using PyTorch (torchao) and ONNX Runtime (Optimum).
-
-Usage:
-    uv run python quantize_models.py
-"""
+import argparse
 
 import torch
 from optimum.onnxruntime import ORTModelForSequenceClassification, ORTQuantizer
 from optimum.onnxruntime.configuration import AutoQuantizationConfig
 from torchao.quantization import Int8DynamicActivationInt8WeightConfig, quantize_
-from transformers import DistilBertForSequenceClassification, DistilBertTokenizer
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from config import (
-    MODEL_ID,
     MODELS_DIR,
     ONNX_DIR,
-    ONNX_QUANTIZED_DIR,
-    PYTORCH_ORIGINAL,
-    PYTORCH_QUANTIZED,
+    ONNX_ORIGINAL_FILE,
+    ONNX_QUANTIZED_FILE,
+    PYTORCH_DIR,
+    PYTORCH_QUANTIZED_FILE,
+    PYTORCH_ORIGINAL_FILE,
+    get_file_size,
 )
 
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Create original and quantized PyTorch/ONNX models."
+    )
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        default="distilbert-base-uncased-finetuned-sst-2-english",
+        help="HuggingFace model ID",
+    )
+    return parser.parse_args()
 
-def create_pytorch_models() -> None:
+
+def create_pytorch_models(model_id: str) -> None:
     """Create original and quantized PyTorch models."""
     print("=" * 60)
     print("Creating PyTorch Models (Original & Quantized)")
     print("=" * 60)
 
-    MODELS_DIR.mkdir(exist_ok=True)
+    pytorch_dir = MODELS_DIR / PYTORCH_DIR
+    pytorch_dir.mkdir(parents=True, exist_ok=True)
 
     # Load pre-trained model
-    print(f"Loading model: {MODEL_ID}")
-    model = DistilBertForSequenceClassification.from_pretrained(MODEL_ID)
+    print(f"Loading model: {model_id}")
+    model = AutoModelForSequenceClassification.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-    # Save original
-    original_path = MODELS_DIR / PYTORCH_ORIGINAL
-    print(f"Saving original model to {original_path}")
-    torch.save(model.state_dict(), original_path)
-    print(f"  Size: {original_path.stat().st_size / 1024 / 1024:.2f} MB")
+    # Save original model and tokenizer to directory
+    print(f"Saving original model to {pytorch_dir}")
+    model.save_pretrained(pytorch_dir)
+    tokenizer.save_pretrained(pytorch_dir)
+    
+    # Calculate size of saved model files
+    total_size = get_file_size(pytorch_dir / PYTORCH_ORIGINAL_FILE)
+    print(f"Saved original model, Size: {total_size:.2f} MB")
+
+    # Load fresh model for quantization (quantize_ modifies in-place)
+    print("Loading fresh model for quantization...")
+    model = AutoModelForSequenceClassification.from_pretrained(model_id)
 
     # Quantize and save
     print("Applying int8 dynamic quantization (torchao)...")
     quantize_(model, Int8DynamicActivationInt8WeightConfig())
 
-    quantized_path = MODELS_DIR / PYTORCH_QUANTIZED
-    print(f"Saving quantized model to {quantized_path}")
-    torch.save(model.state_dict(), quantized_path)
-    print(f"  Size: {quantized_path.stat().st_size / 1024 / 1024:.2f} MB")
+    # torchao quantized models can't use save_pretrained (incompatible tensor storage)
+    # Save state_dict with torch.save to separate file
+    weights_path = pytorch_dir / PYTORCH_QUANTIZED_FILE
+    print(f"Saving quantized model to {weights_path}")
+    torch.save(model.state_dict(), weights_path)
+    
+    print(f"Saved quantized model, Size: {get_file_size(weights_path):.2f} MB")
 
 
-def create_onnx_quantized() -> None:
-    """Create quantized ONNX model using Optimum."""
+def create_onnx_quantized(model_id: str) -> None:
+    """Create original and quantized ONNX models."""
     print("\n" + "=" * 60)
-    print("Creating ONNX Quantized Model (Optimum)")
+    print("Creating ONNX Models (Original & Quantized)")
     print("=" * 60)
 
-    onnx_path = MODELS_DIR / ONNX_DIR
-    onnx_quantized_path = MODELS_DIR / ONNX_QUANTIZED_DIR
+    onnx_dir = MODELS_DIR / ONNX_DIR
+    onnx_dir.mkdir(parents=True, exist_ok=True)
 
     # Export to ONNX
     print("Exporting model to ONNX format...")
-    model = ORTModelForSequenceClassification.from_pretrained(MODEL_ID, export=True)
-    model.save_pretrained(onnx_path)
-    print(f"  Saved to {onnx_path}")
+    model = ORTModelForSequenceClassification.from_pretrained(model_id, export=True)
+    model.save_pretrained(onnx_dir)
+    print(f"  Saved original model, Size: {get_file_size(onnx_dir / ONNX_ORIGINAL_FILE):.2f} MB")
 
-    # Quantize
+    # Save tokenizer with ONNX model
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer.save_pretrained(onnx_dir)
+
+    # Quantize (saves to same directory with different filename)
     print("Quantizing ONNX model (AVX512 VNNI dynamic)...")
     quantizer = ORTQuantizer.from_pretrained(model)
     dq_config = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=False)
-    quantizer.quantize(save_dir=onnx_quantized_path, quantization_config=dq_config)
-    print(f"  Saved to {onnx_quantized_path}")
-
-    # Save tokenizer with quantized model
-    tokenizer = DistilBertTokenizer.from_pretrained(MODEL_ID)
-    tokenizer.save_pretrained(onnx_quantized_path)
+    quantizer.quantize(save_dir=onnx_dir, quantization_config=dq_config)
+    print(f"  Saved quantized model, Size: {get_file_size(onnx_dir / ONNX_QUANTIZED_FILE):.2f} MB")
 
 
 def main() -> None:
     """Run all quantization pipelines."""
-    create_pytorch_models()
-    create_onnx_quantized()
+    args = parse_args()
+    create_pytorch_models(args.model_id)
+    create_onnx_quantized(args.model_id)
     print("\n" + "=" * 60)
     print("All models created successfully!")
     print("=" * 60)

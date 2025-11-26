@@ -1,7 +1,7 @@
 [project]
 name = "fast-bert"
 version = "0.1.0"
-description = "Quantize, benchmark, and evaluate DistilBERT models"
+description = "Quantize, benchmark, and evaluate Bert models"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

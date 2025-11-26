@@ -1,11 +1,3 @@
-"""
-Evaluate DistilBERT model variants on SST-2 sentiment classification dataset.
-
-Usage:
-    uv run python evaluate_models.py
-    uv run python evaluate_models.py --batch-size 64 --max-samples 500
-"""
-
 import argparse
 from typing import Any
 
@@ -14,8 +6,6 @@ import torch
 from datasets import load_dataset
 from sklearn.metrics import (
     accuracy_score,
-    classification_report,
-    confusion_matrix,
     f1_score,
     precision_score,
     recall_score,
@@ -28,7 +18,25 @@ from config import load_onnx, load_pytorch
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Evaluate DistilBERT model variants on SST-2 sentiment classification dataset."
+        description="Evaluate Bert model variants on SST-2 sentiment classification dataset."
+    )
+    parser.add_argument(
+        "--model-id",
+        type=str,
+        default="distilbert-base-uncased-finetuned-sst-2-english",
+        help="HuggingFace model ID (default: distilbert-base-uncased-finetuned-sst-2-english)",
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="glue",
+        help="Dataset name to load from HuggingFace (default: glue)",
+    )
+    parser.add_argument(
+        "--dataset-config",
+        type=str,
+        default="sst2",
+        help="Dataset configuration/subset name (default: sst2)",
     )
     parser.add_argument(
         "--max-samples",
@@ -39,10 +47,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_sst2_validation(max_samples: int | None = None) -> tuple[list[str], list[int]]:
+def load_sst2_validation(
+    dataset_name: str, dataset_config: str, max_samples: int | None = None
+) -> tuple[list[str], list[int]]:
     """Load SST-2 validation dataset."""
-    print("Loading SST-2 validation dataset...")
-    dataset = load_dataset("glue", "sst2", split="validation")
+    print(f"Loading {dataset_name}/{dataset_config} validation dataset...")
+    dataset = load_dataset(dataset_name, dataset_config, split="validation")
 
     texts = list(dataset["sentence"])
     labels = list(dataset["label"])
@@ -93,25 +103,17 @@ def evaluate_model(
         print("   Skipping: Model files not found.")
         return None
 
-    model, tokenizer = loaded
+    model, tokenizer, _file_size = loaded
 
     # Get predictions
     predictions = predict(model, name, tokenizer, texts)
 
-    # Compute metrics
-    metrics = {
-        "accuracy": accuracy_score(labels, predictions),
-        "precision": precision_score(labels, predictions, average="binary"),
-        "recall": recall_score(labels, predictions, average="binary"),
-        "f1": f1_score(labels, predictions, average="binary"),
-    }
-
     return {
         "Model": name,
-        "Accuracy": metrics["accuracy"],
-        "Precision": metrics["precision"],
-        "Recall": metrics["recall"],
-        "F1 Score": metrics["f1"],
+        "Accuracy": accuracy_score(labels, predictions),
+        "Precision": precision_score(labels, predictions, average="binary"),
+        "Recall": recall_score(labels, predictions, average="binary"),
+        "F1 Score": f1_score(labels, predictions, average="binary"),
     }
 
 
@@ -131,7 +133,7 @@ def print_results(results: list[dict]) -> None:
 
     for r in results:
         print(
-            f"{r['Model']:<25} | {r['Size (MB)']:<10.2f} | {r['Accuracy']:<10.4f} | "
+            f"{r['Model']:<25} | {r['Accuracy']:<10.4f} | "
             f"{r['Precision']:<10.4f} | {r['Recall']:<10.4f} | {r['F1 Score']:<10.4f}"
         )
 
@@ -157,7 +159,7 @@ def main() -> None:
     """Run evaluation for all models."""
     args = parse_args()
 
-    texts, labels = load_sst2_validation(args.max_samples)
+    texts, labels = load_sst2_validation(args.dataset, args.dataset_config, args.max_samples)
 
     tasks = {
         "PyTorch Original": lambda: load_pytorch(is_quantized=False),

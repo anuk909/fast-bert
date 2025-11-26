@@ -1,11 +1,3 @@
-"""
-Benchmark inference latency and throughput for DistilBERT model variants.
-
-Usage:
-    uv run python benchmark_models.py
-    uv run python benchmark_models.py --num-samples 200 --warmup-runs 20 --seq-len 64
-"""
-
 import argparse
 import time
 from typing import Any
@@ -20,7 +12,7 @@ from config import load_onnx, load_pytorch
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Benchmark inference latency and throughput for DistilBERT model variants."
+        description="Benchmark inference latency and throughput for Bert model variants."
     )
     parser.add_argument(
         "--num-samples",

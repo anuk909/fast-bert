@@ -1,6 +1,6 @@
 # Fast BERT
 
-Quantize, benchmark, and evaluate DistilBERT models for sentiment classification.
+Quantize, benchmark, and evaluate Bert models for sentiment classification.
 
 This project demonstrates how to optimize transformer models using:
 
@@ -91,7 +91,7 @@ uv run python evaluate_models.py --batch-size 64 --max-samples 500
 
 | Variant                | Framework              | Description                                                               |
 | ---------------------- | ---------------------- | ------------------------------------------------------------------------- |
-| PyTorch Original       | PyTorch                | Base DistilBERT model (`distilbert-base-uncased-finetuned-sst-2-english`) |
+| PyTorch Original       | PyTorch                | Base Bert model (`distilbert-base-uncased-finetuned-sst-2-english`) |
 | PyTorch Quantized      | PyTorch + torchao      | Int8 dynamic activation/weight quantization                               |
 | ONNX Runtime           | ONNX Runtime           | Exported ONNX model                                                       |
 | ONNX Runtime Quantized | ONNX Runtime + Optimum | AVX512 VNNI dynamic quantization                                          |
