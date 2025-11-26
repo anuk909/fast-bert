@@ -15,15 +15,22 @@ def parse_args() -> argparse.Namespace:
         description="Benchmark inference latency and throughput for Bert model variants."
     )
     parser.add_argument(
+        "--model-id",
+        type=str,
+        default=None,
+        help="HuggingFace model ID (e.g., 'ParisNeo/TinyBert-frugal-ai-text-classification'). "
+             "If provided, loads models from a directory based on the model name.",
+    )
+    parser.add_argument(
         "--num-samples",
         type=int,
-        default=100,
+        default=1000,
         help="Number of benchmark samples to run (default: 100)",
     )
     parser.add_argument(
         "--warmup-runs",
         type=int,
-        default=10,
+        default=100,
         help="Number of warmup runs before benchmarking (default: 10)",
     )
     parser.add_argument(
@@ -52,6 +59,7 @@ def run_benchmark(
 ) -> dict | None:
     """Run benchmark for a model."""
     print(f"\n[{'=' * 10} {name.upper()} {'=' * 10}]")
+    torch.set_num_threads(1)
 
     loaded = loader_fn()
     if not loaded:
@@ -61,6 +69,11 @@ def run_benchmark(
     model, tokenizer, size_mb = loaded
 
     # Generate inputs
+    assert seq_len % 4 == 0, "Sequence length must be a multiple of 4"
+    assert seq_len <= model.config.max_position_embeddings, (
+        f"Sequence length {seq_len} exceeds model's max position embeddings "
+        f"{model.config.max_position_embeddings}"
+    )
     text = "Functional programming is " * (seq_len // 4)
     inputs = tokenizer(text, return_tensors="pt")
 
@@ -107,11 +120,13 @@ def main() -> None:
     """Run all benchmarks."""
     args = parse_args()
 
+    model_id = args.model_id
+
     tasks = {
-        "PyTorch Original": lambda: load_pytorch(is_quantized=False),
-        "PyTorch Quantized": lambda: load_pytorch(is_quantized=True),
-        "ONNX Runtime": lambda: load_onnx(is_quantized=False),
-        "ONNX Runtime Quantized": lambda: load_onnx(is_quantized=True),
+        "PyTorch Original": lambda: load_pytorch(is_quantized=False, model_id=model_id),
+        "PyTorch Quantized": lambda: load_pytorch(is_quantized=True, model_id=model_id),
+        "ONNX Runtime": lambda: load_onnx(is_quantized=False, model_id=model_id),
+        "ONNX Runtime Quantized": lambda: load_onnx(is_quantized=True, model_id=model_id),
     }
 
     results = [
