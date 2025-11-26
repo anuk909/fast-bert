@@ -1,7 +1,16 @@
 [project]
 name = "fast-bert"
 version = "0.1.0"
-description = "Add your description here"
+description = "Quantize, benchmark, and evaluate DistilBERT models"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requires-python = ">=3.11"
+dependencies = [
+    "torch==2.9.0",
+    "torchao>=0.4.0",
+    "transformers>=4.35.0",
+    "optimum[onnxruntime]>=1.15.0",
+    "datasets>=2.14.0",
+    "scikit-learn>=1.3.0",
+    "numpy>=1.24.0",
+    "tqdm>=4.66.0",
+]
