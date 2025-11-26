@@ -11,7 +11,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 # Directory and file names
 MODELS_DIR = Path("models")
 PYTORCH_DIR = "pytorch"
-PYTORCH_ORIGINAL_FILE = "model.safetensors"
+PYTORCH_ORIGINAL_FILE = "model.pth"
 PYTORCH_QUANTIZED_FILE = "model_quantized.pth"
 
 ONNX_DIR = "onnx"

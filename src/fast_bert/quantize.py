@@ -45,13 +45,15 @@ def create_pytorch_models(model_id: str) -> None:
     model = AutoModelForSequenceClassification.from_pretrained(model_id)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-    # Save original model and tokenizer to directory
+    # Save original model using torch.save (consistent with quantized model)
     print(f"Saving original model to {pytorch_dir}")
-    model.save_pretrained(pytorch_dir)
+    original_weights_path = pytorch_dir / PYTORCH_ORIGINAL_FILE
+    torch.save(model.state_dict(), original_weights_path)
+    model.save_pretrained(pytorch_dir, safe_serialization=False)  # Save config files only
     tokenizer.save_pretrained(pytorch_dir)
     
     # Calculate size of saved model files
-    total_size = get_file_size(pytorch_dir / PYTORCH_ORIGINAL_FILE)
+    total_size = get_file_size(original_weights_path)
     print(f"Saved original model, Size: {total_size:.2f} MB")
 
     # Load fresh model for quantization (quantize_ modifies in-place)

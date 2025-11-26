@@ -52,12 +52,12 @@ uv run fast-bert-quantize --model-id <model-id>
 
 **Output files:**
 
-| File                                        | Description                      |
-| ------------------------------------------- | -------------------------------- |
-| `models/<model-name>/pytorch/original.pth`  | Original PyTorch weights         |
-| `models/<model-name>/pytorch/quantized.pth` | Int8 quantized PyTorch weights   |
-| `models/<model-name>/onnx/`                 | ONNX exported model              |
-| `models/<model-name>/onnx_quantized/`       | AVX512 VNNI quantized ONNX model |
+| File                                              | Description                      |
+| ------------------------------------------------- | -------------------------------- |
+| `models/{model-name}/pytorch/model.pth`           | Original PyTorch weights         |
+| `models/{model-name}/pytorch/model_quantized.pth` | Int8 quantized PyTorch weights   |
+| `models/{model-name}/onnx/model.onnx`             | Exported ONNX model              |
+| `models/{model-name}/onnx/model_quantized.onnx`   | AVX512 VNNI quantized ONNX model |
 
 ### 2. Benchmark Inference
 
