@@ -18,10 +18,6 @@ This project demonstrates how to optimize transformer models using:
 - 📊 **Evaluation** - Validate accuracy on classification datasets
 - 📈 **Degradation Analysis** - Compare quantized models against the original
 
-## Requirements
-
-- [uv](https://docs.astral.sh/uv/) package manager
-
 ## Setup
 
 ```bash
