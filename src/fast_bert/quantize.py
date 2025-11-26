@@ -6,7 +6,7 @@ from optimum.onnxruntime.configuration import AutoQuantizationConfig
 from torchao.quantization import Int8DynamicActivationInt8WeightConfig, quantize_
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-from config import (
+from fast_bert.config import (
     ONNX_DIR,
     ONNX_ORIGINAL_FILE,
     ONNX_QUANTIZED_FILE,

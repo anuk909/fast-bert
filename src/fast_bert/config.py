@@ -1,7 +1,3 @@
-"""
-Shared configuration and utilities for fast-bert.
-"""
-
 import os
 import warnings
 from pathlib import Path

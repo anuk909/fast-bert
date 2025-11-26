@@ -11,13 +11,13 @@ from sklearn.metrics import (
 )
 from tqdm import tqdm
 
-from config import load_onnx, load_pytorch
+from fast_bert.config import load_onnx, load_pytorch
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Evaluate Bert model variants on SST-2 sentiment classification dataset."
+        description="Evaluate Bert model variants on relevant sequence classification dataset."
     )
     parser.add_argument(
         "--model-id",

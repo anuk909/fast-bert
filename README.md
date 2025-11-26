@@ -1,6 +1,10 @@
 # Fast BERT
 
-Quantize, benchmark, and evaluate Bert models for sentiment classification.
+<p align="center">
+  <img src="assets/fast_bert_wide.jpg" alt="Fast BERT Logo">
+</p>
+
+Quantize, benchmark, and evaluate BERT models for sequence classification on CPU.
 
 This project demonstrates how to optimize transformer models using:
 
@@ -13,6 +17,23 @@ This project demonstrates how to optimize transformer models using:
 - ⚡ **Benchmarking** - Measure inference latency and throughput
 - 📊 **Evaluation** - Validate accuracy on classification datasets
 - 📈 **Degradation Analysis** - Compare quantized models against the original
+
+## Project Structure
+
+```
+fast-bert/
+├── src/
+│   └── fast_bert/
+│       ├── __init__.py
+│       ├── config.py      # Shared configuration and utilities
+│       ├── benchmark.py   # Inference latency/throughput benchmarking
+│       ├── evaluate.py    # Model accuracy evaluation
+│       └── quantize.py    # Model quantization (PyTorch & ONNX)
+├── tests/
+├── models/                # Generated model outputs (gitignored)
+├── pyproject.toml
+└── README.md
+```
 
 ## Requirements
 
@@ -27,12 +48,14 @@ uv sync
 
 ## Usage
 
+After installation, you can use the CLI commands or run modules directly.
+
 ### 1. Quantize Models
 
 Creates original and quantized models using PyTorch (torchao) and ONNX Runtime:
 
 ```bash
-uv run quantize_models.py --model-id <model-id>
+uv run fast-bert-quantize --model-id <model-id>
 ```
 
 **Options:**
@@ -55,7 +78,7 @@ uv run quantize_models.py --model-id <model-id>
 Measures latency and throughput for all model variants:
 
 ```bash
-uv run benchmark_models.py --model-id <model-id>
+uv run fast-bert-benchmark --model-id <model-id>
 ```
 
 **Options:**
@@ -70,7 +93,7 @@ uv run benchmark_models.py --model-id <model-id>
 **Example:**
 
 ```bash
-uv run benchmark_models.py --model-id distilbert-base-uncased-finetuned-sst-2-english --num-samples 200 --warmup-runs 20 --seq-len 64
+uv run fast-bert-benchmark --model-id distilbert-base-uncased-finetuned-sst-2-english --num-samples 200 --warmup-runs 20 --seq-len 64
 ```
 
 ### 3. Evaluate Accuracy
@@ -78,7 +101,7 @@ uv run benchmark_models.py --model-id distilbert-base-uncased-finetuned-sst-2-en
 Evaluates models on a classification dataset:
 
 ```bash
-uv run evaluate_models.py --model-id <model-id> --dataset <dataset> --dataset-split <split> --dataset-input-column <column>
+uv run fast-bert-evaluate --model-id <model-id> --dataset <dataset> --dataset-split <split> --dataset-input-column <column>
 ```
 
 **Options:**
@@ -96,7 +119,7 @@ uv run evaluate_models.py --model-id <model-id> --dataset <dataset> --dataset-sp
 **Example:**
 
 ```bash
-uv run evaluate_models.py --model-id distilbert-base-uncased-finetuned-sst-2-english --dataset glue --dataset-config sst2 --dataset-split validation --dataset-input-column sentence
+uv run fast-bert-evaluate --model-id distilbert-base-uncased-finetuned-sst-2-english --dataset glue --dataset-config sst2 --dataset-split validation --dataset-input-column sentence
 ```
 
 ## Example Commands
@@ -105,26 +128,26 @@ uv run evaluate_models.py --model-id distilbert-base-uncased-finetuned-sst-2-eng
 
 ```bash
 # Quantize
-uv run quantize_models.py --model-id distilbert-base-uncased-finetuned-sst-2-english
+uv run fast-bert-quantize --model-id distilbert-base-uncased-finetuned-sst-2-english
 
 # Evaluate
-uv run evaluate_models.py --model-id distilbert-base-uncased-finetuned-sst-2-english --dataset glue --dataset-config sst2 --dataset-split validation --dataset-input-column sentence
+uv run fast-bert-evaluate --model-id distilbert-base-uncased-finetuned-sst-2-english --dataset glue --dataset-config sst2 --dataset-split validation --dataset-input-column sentence
 
 # Benchmark
-uv run benchmark_models.py --model-id distilbert-base-uncased-finetuned-sst-2-english
+uv run fast-bert-benchmark --model-id distilbert-base-uncased-finetuned-sst-2-english
 ```
 
 ### TinyBERT (Frugal AI Text Classification)
 
 ```bash
 # Quantize
-uv run quantize_models.py --model-id ParisNeo/TinyBert-frugal-ai-text-classification
+uv run fast-bert-quantize --model-id ParisNeo/TinyBert-frugal-ai-text-classification
 
 # Evaluate
-uv run evaluate_models.py --model-id ParisNeo/TinyBert-frugal-ai-text-classification --dataset QuotaClimat/frugalaichallenge-text-train --dataset-split test --dataset-input-column quote --normalize-labels
+uv run fast-bert-evaluate --model-id ParisNeo/TinyBert-frugal-ai-text-classification --dataset QuotaClimat/frugalaichallenge-text-train --dataset-split test --dataset-input-column quote --normalize-labels
 
 # Benchmark
-uv run benchmark_models.py --model-id ParisNeo/TinyBert-frugal-ai-text-classification
+uv run fast-bert-benchmark --model-id ParisNeo/TinyBert-frugal-ai-text-classification
 ```
 
 ## Model Variants

@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from config import load_onnx, load_pytorch
+from fast_bert.config import load_onnx, load_pytorch
 
 
 def parse_args() -> argparse.Namespace:
