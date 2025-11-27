@@ -1,4 +1,4 @@
-# Fast BERT
+# Fast BERT Toolkit
 
 <p align="center">
   <img src="assets/fast_bert_wide.jpg" alt="Fast BERT Logo">
